@@ -20,4 +20,9 @@ pub mod snowlotus {
         ctx.accounts.handler(game_id, target_price, ctx.bumps)?;
         Ok(())
     }
+
+    pub fn mint_booster(ctx: Context<MintBooster>, game_id: u64) -> Result<()> {
+        ctx.accounts.handler(game_id, ctx.bumps)?;
+        Ok(())
+    }
 }
