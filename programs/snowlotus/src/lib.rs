@@ -16,8 +16,20 @@ declare_id!("HZyyQDqNnQXd1coQB111vyg4VLutgshubTEAPYK99n61");
 pub mod snowlotus {
     use super::*;
 
-    pub fn initialize(ctx: Context<Initialize>, game_id: u64, target_price: u64) -> Result<()> {
-        ctx.accounts.handler(game_id, target_price, ctx.bumps)?;
+    pub fn initialize(
+        ctx: Context<Initialize>,
+        game_id: u64,
+        target_price: u64,
+        randomness_period: u8,
+        genesis_time: u64,
+    ) -> Result<()> {
+        ctx.accounts.handler(
+            game_id,
+            target_price,
+            randomness_period,
+            genesis_time,
+            ctx.bumps,
+        )?;
         Ok(())
     }
 

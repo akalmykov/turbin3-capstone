@@ -24,8 +24,10 @@ describe("snowlotus", () => {
     await airdropSol(gameAdmin.publicKey, 10);
     const gameId = new BN(1);
     const targetPrice = new BN(2 * LAMPORTS_PER_SOL);
+    const randomnessPeriod = new BN(3);
+    const genesisTime = new BN(1692803367);
     const tx = await program.methods
-      .initialize(gameId, targetPrice)
+      .initialize(gameId, targetPrice, randomnessPeriod, genesisTime)
       .signers([gameAdmin])
       .accounts({
         admin: gameAdmin.publicKey,

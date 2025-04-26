@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{error::ErrorCode, state::Game};
+use crate::{error::CustomErrorCode, state::Game};
 use anchor_spl::{
     metadata::{
         create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -24,7 +24,7 @@ pub struct MintBooster<'info> {
     pub game: Account<'info, Game>,
     #[account(
         mut,
-        address = game.mint @ ErrorCode::InvalidMint,
+        address = game.mint @ CustomErrorCode::InvalidMint,
     )]
     pub mint: InterfaceAccount<'info, Mint>,
 
@@ -60,31 +60,31 @@ pub struct MintBooster<'info> {
 
 impl<'info> MintBooster<'info> {
     pub fn handler(&self, game_id: u64, bumps: MintBoosterBumps) -> Result<()> {
-        let game_seeds = &[b"game", game_id.to_le_bytes().as_ref(), &[self.game.bump]];
-        let signer_seeds = &[&game_seeds[..]];
+        // let game_seeds = &[b"game", game_id.to_le_bytes().as_ref(), &[self.game.bump]];
+        // let signer_seeds = &[&game_seeds[..]];
 
         // Mint 5 editions
-        for edition_number in 0..5 {
-            let edition_cpi = CpiContext::new_with_signer(
-                self.metadata_program.to_account_info(),
-                MintNewEditionFromMasterEditionViaToken {
-                    new_metadata: self.new_metadata.to_account_info(),
-                    new_edition: self.new_edition.to_account_info(),
-                    new_mint: self.new_mint.to_account_info(),
-                    metadata: self.metadata.to_account_info(),
-                    master_edition: self.master_edition.to_account_info(),
-                    mint_authority: self.game.to_account_info(),
-                    payer: self.player.to_account_info(),
-                    token_account: self.master_edition_ata.to_account_info(),
-                    token_program: self.token_program.to_account_info(),
-                    system_program: self.system_program.to_account_info(),
-                    rent: self.rent.to_account_info(),
-                },
-                signer_seeds,
-            );
+        // for edition_number in 0..5 {
+        //     let edition_cpi = CpiContext::new_with_signer(
+        //         self.metadata_program.to_account_info(),
+        //         MintNewEditionFromMasterEditionViaToken {
+        //             new_metadata: self.new_metadata.to_account_info(),
+        //             new_edition: self.new_edition.to_account_info(),
+        //             new_mint: self.new_mint.to_account_info(),
+        //             metadata: self.metadata.to_account_info(),
+        //             master_edition: self.master_edition.to_account_info(),
+        //             mint_authority: self.game.to_account_info(),
+        //             payer: self.player.to_account_info(),
+        //             token_account: self.master_edition_ata.to_account_info(),
+        //             token_program: self.token_program.to_account_info(),
+        //             system_program: self.system_program.to_account_info(),
+        //             rent: self.rent.to_account_info(),
+        //         },
+        //         signer_seeds,
+        //     );
 
-            mint_new_edition_from_master_edition_via_token(edition_cpi, edition_number)?;
-        }
+        //     mint_new_edition_from_master_edition_via_token(edition_cpi, edition_number)?;
+        // }
 
         Ok(())
     }

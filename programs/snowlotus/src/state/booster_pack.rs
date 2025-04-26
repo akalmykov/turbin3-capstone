@@ -1,0 +1,14 @@
+use anchor_lang::prelude::*;
+
+#[account]
+#[derive(InitSpace)]
+pub struct BoosterPack {
+    pub game_id: u64,
+    pub slot: u64,
+    pub randomness_round: u64,
+    pub timestamp: u64,
+    pub owner: Pubkey,
+    pub pack_seqno: u64,
+    pub pack_price: u64,
+    pub bump: u8,
+}

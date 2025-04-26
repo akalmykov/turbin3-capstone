@@ -8,7 +8,9 @@ pub struct Game {
     pub target_price: u64,
     pub bump: u8,
     pub treasury_bump: u8,
+    pub prize_pool_bump: u8,
     pub mint: Pubkey,
     pub metadata_bump: u8,
     pub master_edition_bump: u8,
+    pub vrf_config_bump: u8,
 }

@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::state::Game;
+use crate::{state::Game, VrfConfig};
 use anchor_spl::{
     metadata::{
         create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -64,10 +64,24 @@ pub struct Initialize<'info> {
     pub game: Account<'info, Game>,
 
     #[account(
+        init,
+        payer = admin,
+        seeds = [b"vrf_config", game.key().as_ref()],   
+        bump,
+        space = 8 + VrfConfig::INIT_SPACE,
+    )]
+    pub vrf_config: Account<'info, VrfConfig>,
+
+    #[account(
         seeds = [b"treasury", game.key().as_ref()],
         bump,
     )]
     pub treasury: SystemAccount<'info>,
+    #[account(
+        seeds = [b"prize_pool", game.key().as_ref()],
+        bump,
+    )]
+    pub prize_pool: SystemAccount<'info>,
     pub system_program: Program<'info, System>,
     pub token_program: Interface<'info, TokenInterface>,
     pub metadata_program: Program<'info, Metadata>,
@@ -90,6 +104,8 @@ impl<'info> Initialize<'info> {
         &mut self,
         game_id: u64,
         target_price: u64,
+        randomness_period: u8,
+        genesis_time: u64,
         bumps: InitializeBumps,
     ) -> Result<()> {
         msg!("Greetings");
@@ -102,6 +118,13 @@ impl<'info> Initialize<'info> {
             mint: self.mint.key(),
             metadata_bump: bumps.metadata,
             master_edition_bump: bumps.master_edition,
+            prize_pool_bump: bumps.prize_pool,
+            vrf_config_bump: bumps.vrf_config,
+        });
+        self.vrf_config.set_inner(VrfConfig {
+            randomness_period,
+            genesis_time,
+            bump: bumps.vrf_config,
         });
 
         let game_id_bytes = game_id.to_le_bytes();
