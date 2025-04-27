@@ -41,9 +41,16 @@ pub mod snowlotus {
         player: Pubkey,
         booster_pack_seq_no: u64,
         randomness: [u8; 32],
+        randomness_round: u64,
     ) -> Result<()> {
-        ctx.accounts
-            .handler(game_id, player, booster_pack_seq_no, randomness, ctx.bumps)?;
+        ctx.accounts.handler(
+            game_id,
+            player,
+            booster_pack_seq_no,
+            randomness,
+            randomness_round,
+            ctx.bumps,
+        )?;
         Ok(())
     }
 

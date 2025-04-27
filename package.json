@@ -6,7 +6,10 @@
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.31.0",
-    "@metaplex-foundation/mpl-token-metadata": "^3.4.0"
+    "@metaplex-foundation/mpl-bubblegum": "^4.4.0",
+    "@metaplex-foundation/mpl-token-metadata": "^3.4.0",
+    "@metaplex-foundation/umi": "^1.2.0",
+    "@metaplex-foundation/umi-bundle-defaults": "^1.2.0"
   },
   "devDependencies": {
     "@types/bn.js": "^5.1.0",

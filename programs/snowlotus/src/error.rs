@@ -14,4 +14,6 @@ pub enum CustomErrorCode {
     InvalidPlayer,
     #[msg("Booster pack already opened")]
     BoosterPackAlreadyOpened,
+    #[msg("Invalid randomness round")]
+    InvalidRandomnessRound,
 }

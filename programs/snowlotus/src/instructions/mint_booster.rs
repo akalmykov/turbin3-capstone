@@ -72,12 +72,23 @@ pub struct MintBooster<'info> {
 }
 
 impl<'info> MintBooster<'info> {
-    pub fn handler(&mut self, game_id: u64, player: Pubkey, booster_pack_seq_no: u64, randomness: [u8; 32], bumps: MintBoosterBumps) -> Result<()> {
+    pub fn handler(
+        &mut self, 
+        game_id: u64, 
+        player: Pubkey, 
+        booster_pack_seq_no: u64, 
+        randomness: [u8; 32], 
+        randomness_round: u64, 
+        bumps: MintBoosterBumps
+    ) -> Result<()> {
+        const MAX_ROUND_DELAY: u64 = 5; // TODO move to configuration
+        require!(self.booster_pack.randomness_round < randomness_round, CustomErrorCode::InvalidRandomnessRound);
+        require!(self.booster_pack.randomness_round + MAX_ROUND_DELAY > randomness_round, CustomErrorCode::InvalidRandomnessRound);
         require!(self.admin.key() == self.game.admin, CustomErrorCode::InvalidAdmin);        
         require!(!self.booster_pack.is_open, CustomErrorCode::BoosterPackAlreadyOpened);
         self.booster_pack.randomness = randomness;
         self.booster_pack.is_open = true;
-        msg!("Updating booster pack: {:?}", self.booster_pack.to_account_info());
+        // msg!("Updating booster pack: {:?}", self.booster_pack.to_account_info());
         // let game_seeds = &[b"game", game_id.to_le_bytes().as_ref(), &[self.game.bump]];
         // let signer_seeds = &[&game_seeds[..]];
 

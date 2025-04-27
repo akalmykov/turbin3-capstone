@@ -11,6 +11,15 @@ import {
 import { assert } from "chai";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
 import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import {
+  createSignerFromKeypair,
+  generateSigner,
+  keypairIdentity,
+  publicKey,
+} from "@metaplex-foundation/umi";
+import { createTree } from "@metaplex-foundation/mpl-bubblegum";
+import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
+import { mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
 
 describe("snowlotus", () => {
   // Configure the client to use the local cluster.
@@ -70,7 +79,23 @@ describe("snowlotus", () => {
     assert.isTrue(gamePDA.targetPrice.eq(targetPrice));
     assert.isTrue(gamePDA.bump === bump);
 
-    let mint = gamePDA.mint;
+    // mint cNFTs
+    const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
+    const umi = createUmi(rpcUrl).use(mplBubblegum());
+
+    const merkleTree = createSignerFromKeypair(umi, {
+      publicKey: publicKey(gameAdmin.publicKey),
+      secretKey: gameAdmin.secretKey,
+    });
+    umi.use(keypairIdentity(merkleTree));
+    console.log("Merkle tree public key", merkleTree.publicKey.toString());
+
+    const builder = await createTree(umi, {
+      merkleTree,
+      maxDepth: 14,
+      maxBufferSize: 64,
+    });
+    await builder.sendAndConfirm(umi);
 
     const player = anchor.web3.Keypair.generate();
     console.log("Player key", player.publicKey);
