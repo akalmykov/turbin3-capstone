@@ -13,4 +13,6 @@ pub struct Game {
     pub metadata_bump: u8,
     pub master_edition_bump: u8,
     pub vrf_config_bump: u8,
+    // Callback fee in lamports
+    pub boosters_pack_vrf_callback_fee: u64,
 }

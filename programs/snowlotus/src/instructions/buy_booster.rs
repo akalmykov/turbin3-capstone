@@ -5,7 +5,7 @@ use crate::{
 use anchor_lang::prelude::*;
 #[derive(Accounts)]
 #[instruction(game_id: u64)]
-pub struct RequestBooster<'info> {
+pub struct BuyBooster<'info> {
     #[account(mut)]
     pub signer: Signer<'info>,
 
@@ -33,7 +33,11 @@ pub struct RequestBooster<'info> {
     #[account(
         init,
         payer = signer,
-        seeds = [b"booster_pack", game_id.to_le_bytes().as_ref(), signer.key().as_ref()],
+        seeds = [
+          b"booster_pack", 
+          game_id.to_le_bytes().as_ref(), 
+          signer.key().as_ref(),
+          player.booster_pack_count.to_le_bytes().as_ref()],
         bump,
         space = 8 + BoosterPack::INIT_SPACE,
     )]
@@ -49,7 +53,7 @@ pub struct RequestBooster<'info> {
     pub system_program: Program<'info, System>,
 }
 
-impl<'info> RequestBooster<'info> {
+impl<'info> BuyBooster<'info> {
     pub fn round_for_time(
         &self,
         current_time: u64,
@@ -63,7 +67,7 @@ impl<'info> RequestBooster<'info> {
         Ok((current_time - genesis_time) / period_seconds as u64 + 1)
     }
 
-    pub fn handler(&mut self, game_id: u64, bumps: RequestBoosterBumps) -> Result<()> {
+    pub fn handler(&mut self, game_id: u64, bumps: BuyBoosterBumps) -> Result<()> {
         let current_time = self.clock.unix_timestamp as u64;
         let randomness_round = self.round_for_time(
             current_time,
@@ -73,16 +77,29 @@ impl<'info> RequestBooster<'info> {
 
         let slot = self.clock.slot;
 
+        let booster_pack_count = self.player.booster_pack_count;
+        if booster_pack_count == 0 {
+          self.player.set_inner(Player {
+              owner: self.signer.key(),
+              booster_pack_count,
+              bump: bumps.player,
+          });
+        }
+  
         self.booster_pack.set_inner(BoosterPack {
             slot,
             randomness_round,
             timestamp: current_time,
             game_id,
             owner: self.signer.key(),
-            pack_seqno: 0,
-            pack_price: 0,
+            seq_no: booster_pack_count,
+            pack_price: self.game.target_price,
             bump: bumps.booster_pack,
+            is_open: false,
+            randomness: [0; 32],
         });
+
+        self.player.booster_pack_count += 1;
 
         Ok(())
     }

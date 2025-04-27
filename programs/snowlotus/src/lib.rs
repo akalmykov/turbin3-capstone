@@ -22,18 +22,32 @@ pub mod snowlotus {
         target_price: u64,
         randomness_period: u8,
         genesis_time: u64,
+        boosters_pack_vrf_callback_fee: u64,
     ) -> Result<()> {
         ctx.accounts.handler(
             game_id,
             target_price,
             randomness_period,
             genesis_time,
+            boosters_pack_vrf_callback_fee,
             ctx.bumps,
         )?;
         Ok(())
     }
 
-    pub fn mint_booster(ctx: Context<MintBooster>, game_id: u64) -> Result<()> {
+    pub fn mint_booster(
+        ctx: Context<MintBooster>,
+        game_id: u64,
+        player: Pubkey,
+        booster_pack_seq_no: u64,
+        randomness: [u8; 32],
+    ) -> Result<()> {
+        ctx.accounts
+            .handler(game_id, player, booster_pack_seq_no, randomness, ctx.bumps)?;
+        Ok(())
+    }
+
+    pub fn buy_booster(ctx: Context<BuyBooster>, game_id: u64) -> Result<()> {
         ctx.accounts.handler(game_id, ctx.bumps)?;
         Ok(())
     }

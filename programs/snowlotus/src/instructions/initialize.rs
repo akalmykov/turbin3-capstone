@@ -106,6 +106,7 @@ impl<'info> Initialize<'info> {
         target_price: u64,
         randomness_period: u8,
         genesis_time: u64,
+        boosters_pack_vrf_callback_fee: u64,
         bumps: InitializeBumps,
     ) -> Result<()> {
         msg!("Greetings");
@@ -120,6 +121,7 @@ impl<'info> Initialize<'info> {
             master_edition_bump: bumps.master_edition,
             prize_pool_bump: bumps.prize_pool,
             vrf_config_bump: bumps.vrf_config,
+            boosters_pack_vrf_callback_fee,
         });
         self.vrf_config.set_inner(VrfConfig {
             randomness_period,

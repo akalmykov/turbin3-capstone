@@ -8,4 +8,10 @@ pub enum CustomErrorCode {
     InvalidMint,
     #[msg("Round before genesis")]
     RoundBeforeGenesis,
+    #[msg("Invalid admin")]
+    InvalidAdmin,
+    #[msg("Invalid player")]
+    InvalidPlayer,
+    #[msg("Booster pack already opened")]
+    BoosterPackAlreadyOpened,
 }

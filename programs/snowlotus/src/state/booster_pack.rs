@@ -8,7 +8,9 @@ pub struct BoosterPack {
     pub randomness_round: u64,
     pub timestamp: u64,
     pub owner: Pubkey,
-    pub pack_seqno: u64,
+    pub seq_no: u64,
     pub pack_price: u64,
     pub bump: u8,
+    pub is_open: bool,
+    pub randomness: [u8; 32],
 }
