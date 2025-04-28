@@ -216,17 +216,19 @@ describe("snowlotus", () => {
 
     console.log("boosterPack", boosterPackPDAAddress);
     await confirmTransaction(tx3);
-    // const openedBoosterPack = await program.account.boosterPack.fetch(
-    //   newBoosterPacks[0]
-    // );
-    // console.log(
-    //   "Opened booster pack:",
-    //   openedBoosterPack.randomness.toString("hex")
-    // );
-    // assert.isTrue(openedBoosterPack.isOpen);
-    // assert.strictEqual(
-    //   Buffer.from(openedBoosterPack.randomness).toString("hex"),
-    //   latestRandomness.randomness
-    // );
+    const openedBoosterPack = await program.account.boosterPack.fetch(
+      newBoosterPacks[0]
+    );
+    console.log(
+      "Opened booster pack:",
+      openedBoosterPack.randomness.toString("hex")
+    );
+    assert.isTrue(openedBoosterPack.isOpen);
+    assert.strictEqual(
+      Buffer.from(openedBoosterPack.randomness).toString("hex"),
+      latestRandomness.randomness
+    );
+
+    /// mint 5 random cards to player
   });
 });
