@@ -16,10 +16,12 @@ import {
   generateSigner,
   keypairIdentity,
   publicKey,
+  sol,
 } from "@metaplex-foundation/umi";
 import { createTree } from "@metaplex-foundation/mpl-bubblegum";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
+import { min } from "bn.js";
 
 describe("snowlotus", () => {
   // Configure the client to use the local cluster.
@@ -33,27 +35,15 @@ describe("snowlotus", () => {
     const gameAdmin = anchor.web3.Keypair.generate();
     console.log("Admin key", gameAdmin.publicKey);
     await airdropSol(gameAdmin.publicKey, 10);
+    console.log(
+      "admin sol balance",
+      await getLamportBalance(gameAdmin.publicKey)
+    );
     const gameId = new BN(1);
     const targetPrice = new BN(2 * LAMPORTS_PER_SOL);
     const randomnessPeriod = 3;
     const genesisTime = new BN(1692803367);
-    const tx = await program.methods
-      .initialize(
-        gameId,
-        targetPrice,
-        randomnessPeriod,
-        genesisTime,
-        new BN(1_000_000)
-      )
-      .signers([gameAdmin])
-      .accounts({
-        admin: gameAdmin.publicKey,
-        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-      })
-      .rpc();
-    await confirmTransaction(tx);
-    console.log("Your transaction signature", tx);
-    // Get the PDA address: b"game", admin.key().as_ref(), game_id.to_le_bytes().as_ref()
+    anchor.getProvider().wallet.payer = gameAdmin;
     const [gamePDAAddress, bump] =
       await anchor.web3.PublicKey.findProgramAddressSync(
         [
@@ -62,12 +52,32 @@ describe("snowlotus", () => {
         ],
         program.programId
       );
-
     const [treasuryPDAAddress, treasuryBump] =
       await anchor.web3.PublicKey.findProgramAddressSync(
         [Buffer.from("treasury"), gamePDAAddress.toBuffer()],
         program.programId
       );
+    const mint = anchor.web3.Keypair.generate();
+
+    const tx = await program.methods
+      .initialize(
+        gameId,
+        targetPrice,
+        randomnessPeriod,
+        genesisTime,
+        new BN(1_000_000)
+      )
+      .signers([gameAdmin, mint])
+      .accounts({
+        admin: gameAdmin.publicKey,
+        tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
+        game: gamePDAAddress,
+        treasury: treasuryPDAAddress,
+        mint: mint.publicKey,
+      })
+      .rpc();
+    await confirmTransaction(tx);
+    console.log("Your transaction signature", tx);
 
     console.log("PDA address:", gamePDAAddress.toString());
     // Fetch the account data
@@ -80,21 +90,38 @@ describe("snowlotus", () => {
     assert.isTrue(gamePDA.bump === bump);
 
     // mint cNFTs
+
     const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
+    console.log("RPC URL:", rpcUrl);
     const umi = createUmi(rpcUrl).use(mplBubblegum());
 
-    const merkleTree = createSignerFromKeypair(umi, {
+    const umiAdmin = createSignerFromKeypair(umi, {
       publicKey: publicKey(gameAdmin.publicKey),
       secretKey: gameAdmin.secretKey,
     });
-    umi.use(keypairIdentity(merkleTree));
-    console.log("Merkle tree public key", merkleTree.publicKey.toString());
+    umi.use(keypairIdentity(umiAdmin));
+
+    // Make gameAdmin the payer
+
+    // Instead of using gameAdmin, generate a fresh signer for the tree
+    const merkleTree = generateSigner(umi);
+    console.log("Merkle tree public key:", merkleTree.publicKey.toString());
+    console.log(
+      "umi admin sol balance",
+      await umi.rpc.getBalance(umiAdmin.publicKey)
+    );
+    await umi.rpc.airdrop(umiAdmin.publicKey, sol(2));
+    console.log(
+      "umi admin sol balance",
+      await umi.rpc.getBalance(umiAdmin.publicKey)
+    );
 
     const builder = await createTree(umi, {
       merkleTree,
       maxDepth: 14,
       maxBufferSize: 64,
     });
+
     await builder.sendAndConfirm(umi);
 
     const player = anchor.web3.Keypair.generate();
@@ -169,76 +196,37 @@ describe("snowlotus", () => {
       boosterPack.randomnessRound.toNumber() + 1
     );
     const randomness = Buffer.from(latestRandomness.randomness, "hex");
+
+    anchor.getProvider().wallet.payer = gameAdmin;
     const tx3 = await program.methods
-      .mintBooster(gameId, player.publicKey, boosterPack.seqNo, randomness)
+      .mintBooster(
+        gameId,
+        player.publicKey,
+        boosterPack.seqNo,
+        randomness,
+        new BN(latestRandomness.round)
+      )
       .signers([gameAdmin])
       .accounts({
         admin: gameAdmin.publicKey,
+        game: gamePDAAddress,
+        boosterPack: boosterPackPDAAddress,
       })
       .rpc();
 
-    //   .transaction();
-
-    // const tx3Sim = await anchor
-    //   .getProvider()
-    //   .connection.simulateTransaction(tx3, [gameAdmin]);
-    // console.log("Simulation result:", tx3Sim);
     console.log("boosterPack", boosterPackPDAAddress);
     await confirmTransaction(tx3);
-    const openedBoosterPack = await program.account.boosterPack.fetch(
-      newBoosterPacks[0]
-    );
-    console.log(
-      "Opened booster pack:",
-      openedBoosterPack.randomness.toString("hex")
-    );
-    assert.isTrue(openedBoosterPack.isOpen);
-    assert.strictEqual(
-      Buffer.from(openedBoosterPack.randomness).toString("hex"),
-      latestRandomness.randomness
-    );
-    // const sim = await anchor
-    //   .getProvider()
-    //   .connection.simulateTransaction(buyBoosterTx, [player]);
-    // console.log("Simulation result:", sim);
-
-    // .rpc();
-    // await confirmTransaction(buyBoosterTx);
-    // const [metadataAddress] = PublicKey.findProgramAddressSync(
-    //   [
-    //     Buffer.from("metadata"),
-    //     MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-    //     mint.toBuffer(),
-    //   ],
-    //   MPL_TOKEN_METADATA_PROGRAM_ID
+    // const openedBoosterPack = await program.account.boosterPack.fetch(
+    //   newBoosterPacks[0]
     // );
-
-    // const [masterEditionAddress] = PublicKey.findProgramAddressSync(
-    //   [
-    //     Buffer.from("metadata"),
-    //     MPL_TOKEN_METADATA_PROGRAM_ID.toBuffer(),
-    //     mint.toBuffer(),
-    //     Buffer.from("edition"),
-    //   ],
-    //   MPL_TOKEN_METADATA_PROGRAM_ID
+    // console.log(
+    //   "Opened booster pack:",
+    //   openedBoosterPack.randomness.toString("hex")
     // );
-
-    // const mintBoosterTx = await program.methods
-    //   .mintBooster(gameId)
-    //   .accounts({
-    //     player: player.publicKey,
-    //     // game: gamePDAAddress,
-    //     mint: mint,
-    //     // treasury: treasuryPDAAddress,
-    //     // metadata: metadataAddress,
-    //     // masterEdition: masterEditionAddress,
-    //     // systemProgram: anchor.web3.SystemProgram.programId,
-    //     tokenProgram: anchor.utils.token.TOKEN_PROGRAM_ID,
-    //     // metadataProgram: MPL_TOKEN_METADATA_PROGRAM_ID,
-    //     // rent: anchor.web3.SYSVAR_RENT_PUBKEY,
-    //   })
-    //   .signers([player])
-    //   .rpc();
-    // await confirmTransaction(mintBoosterTx);
+    // assert.isTrue(openedBoosterPack.isOpen);
+    // assert.strictEqual(
+    //   Buffer.from(openedBoosterPack.randomness).toString("hex"),
+    //   latestRandomness.randomness
+    // );
   });
 });

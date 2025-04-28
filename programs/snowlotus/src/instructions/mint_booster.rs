@@ -34,11 +34,11 @@ pub struct MintBooster<'info> {
     )]
     pub booster_pack: Account<'info, BoosterPack>,
 
-    #[account(
-        seeds = [b"treasury", game.key().as_ref()],
-        bump = game.treasury_bump,
-    )]
-    pub treasury: SystemAccount<'info>,
+    // #[account(
+    //     seeds = [b"treasury", game.key().as_ref()],
+    //     bump = game.treasury_bump,
+    // )]
+    // pub treasury: SystemAccount<'info>,
 
 
     // #[account(
@@ -82,8 +82,11 @@ impl<'info> MintBooster<'info> {
         bumps: MintBoosterBumps
     ) -> Result<()> {
         const MAX_ROUND_DELAY: u64 = 5; // TODO move to configuration
-        require!(self.booster_pack.randomness_round < randomness_round, CustomErrorCode::InvalidRandomnessRound);
-        require!(self.booster_pack.randomness_round + MAX_ROUND_DELAY > randomness_round, CustomErrorCode::InvalidRandomnessRound);
+        require!(
+            self.booster_pack.randomness_round <= randomness_round && 
+            randomness_round <= self.booster_pack.randomness_round + MAX_ROUND_DELAY, 
+            CustomErrorCode::InvalidRandomnessRound
+        );
         require!(self.admin.key() == self.game.admin, CustomErrorCode::InvalidAdmin);        
         require!(!self.booster_pack.is_open, CustomErrorCode::BoosterPackAlreadyOpened);
         self.booster_pack.randomness = randomness;
