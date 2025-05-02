@@ -10,18 +10,30 @@ import {
 } from "./test_utils";
 import { assert } from "chai";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import { MPL_TOKEN_METADATA_PROGRAM_ID } from "@metaplex-foundation/mpl-token-metadata";
+import {
+  MPL_TOKEN_METADATA_PROGRAM_ID,
+  mplTokenMetadata,
+} from "@metaplex-foundation/mpl-token-metadata";
 import {
   createSignerFromKeypair,
   generateSigner,
   keypairIdentity,
+  none,
   publicKey,
   sol,
 } from "@metaplex-foundation/umi";
-import { createTree } from "@metaplex-foundation/mpl-bubblegum";
+import {
+  createTree,
+  fetchTreeConfigFromSeeds,
+  findLeafAssetIdPda,
+  LeafSchema,
+  mintV1,
+  parseLeafFromMintV1Transaction,
+} from "@metaplex-foundation/mpl-bubblegum";
 import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
 import { min } from "bn.js";
+import { createSplAssociatedTokenProgram } from "@metaplex-foundation/mpl-toolbox";
 
 describe("snowlotus", () => {
   // Configure the client to use the local cluster.
@@ -91,9 +103,15 @@ describe("snowlotus", () => {
 
     // mint cNFTs
 
+    // anchor
+    //   .getProvider()
+    //   .connection.onAccountChange(gamePDAAddress, (accountInfo) => {
+    //     console.log("Account changed:", accountInfo);
+    //   });
     const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
     console.log("RPC URL:", rpcUrl);
-    const umi = createUmi(rpcUrl).use(mplBubblegum());
+    const umi = createUmi(rpcUrl).use(mplBubblegum()).use(mplTokenMetadata());
+    umi.programs.add(createSplAssociatedTokenProgram());
 
     const umiAdmin = createSignerFromKeypair(umi, {
       publicKey: publicKey(gameAdmin.publicKey),
@@ -123,6 +141,8 @@ describe("snowlotus", () => {
     });
 
     await builder.sendAndConfirm(umi);
+    const treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
+    console.log("treeConfig", treeConfig);
 
     const player = anchor.web3.Keypair.generate();
     console.log("Player key", player.publicKey);
@@ -228,6 +248,32 @@ describe("snowlotus", () => {
       Buffer.from(openedBoosterPack.randomness).toString("hex"),
       latestRandomness.randomness
     );
+
+    const { signature } = await mintV1(umi, {
+      leafOwner: publicKey(player.publicKey),
+      merkleTree: merkleTree.publicKey,
+      metadata: {
+        name: "My Compressed NFT",
+        uri: "https://example.com/my-cnft.json",
+        sellerFeeBasisPoints: 500, // 5%
+        collection: none(),
+        creators: [
+          { address: umi.identity.publicKey, verified: false, share: 100 },
+        ],
+      },
+    }).sendAndConfirm(umi);
+    const leaf: LeafSchema = await parseLeafFromMintV1Transaction(
+      umi,
+      signature
+    );
+    console.log("leaf", leaf);
+    const assetId = findLeafAssetIdPda(umi, {
+      merkleTree: merkleTree.publicKey,
+      leafIndex: leaf.nonce,
+    });
+    console.log("assetId", assetId);
+    const rpcAssetProof = await umi.rpc.getAssetProof(publicKey(assetId));
+    console.log(rpcAssetProof);
 
     /// mint 5 random cards to player
   });

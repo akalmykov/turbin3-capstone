@@ -55,7 +55,7 @@ export async function scanNewBoosterPacksSinceSlot(
   programId,
   startSlot
 ) {
-  // 1. Get all confirmed blocks since startSlot
+  // TODO: look into webhooks in RPC
   const currentSlot = await connection.getSlot("confirmed");
   const slots = [];
   for (let slot = startSlot + 1; slot <= currentSlot; slot++) {
@@ -70,16 +70,12 @@ export async function scanNewBoosterPacksSinceSlot(
     });
     if (!block) continue;
     for (const tx of block.transactions) {
-      // Only look at transactions involving your program
       if (!tx.transaction.message.accountKeys.some((k) => k.equals(programId)))
         continue;
-      // Look for account creations in postTokenBalances or meta
       for (const key of tx.transaction.message.accountKeys) {
-        // Get account info to check if it's a new booster pack
         const accountInfo = await connection.getAccountInfo(key);
         if (!accountInfo) continue;
 
-        // Check if account data starts with booster pack discriminator
         const boosterPackDiscriminator = getDiscriminator("BoosterPack");
         if (accountInfo.data.slice(0, 8).equals(boosterPackDiscriminator)) {
           newBoosterPacks.push(key);
