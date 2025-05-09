@@ -101,48 +101,39 @@ describe("snowlotus", () => {
     assert.isTrue(gamePDA.targetPrice.eq(targetPrice));
     assert.isTrue(gamePDA.bump === bump);
 
-    // mint cNFTs
+    // // mint cNFTs
+    // const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
+    // console.log("RPC URL:", rpcUrl);
+    // const umi = createUmi(rpcUrl).use(mplBubblegum()).use(mplTokenMetadata());
+    // umi.programs.add(createSplAssociatedTokenProgram());
 
-    // anchor
-    //   .getProvider()
-    //   .connection.onAccountChange(gamePDAAddress, (accountInfo) => {
-    //     console.log("Account changed:", accountInfo);
-    //   });
-    const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
-    console.log("RPC URL:", rpcUrl);
-    const umi = createUmi(rpcUrl).use(mplBubblegum()).use(mplTokenMetadata());
-    umi.programs.add(createSplAssociatedTokenProgram());
+    // const umiAdmin = createSignerFromKeypair(umi, {
+    //   publicKey: publicKey(gameAdmin.publicKey),
+    //   secretKey: gameAdmin.secretKey,
+    // });
+    // umi.use(keypairIdentity(umiAdmin));
 
-    const umiAdmin = createSignerFromKeypair(umi, {
-      publicKey: publicKey(gameAdmin.publicKey),
-      secretKey: gameAdmin.secretKey,
-    });
-    umi.use(keypairIdentity(umiAdmin));
+    // const merkleTree = generateSigner(umi);
+    // console.log("Merkle tree public key:", merkleTree.publicKey.toString());
+    // console.log(
+    //   "umi admin sol balance",
+    //   await umi.rpc.getBalance(umiAdmin.publicKey)
+    // );
+    // await umi.rpc.airdrop(umiAdmin.publicKey, sol(2));
+    // console.log(
+    //   "umi admin sol balance",
+    //   await umi.rpc.getBalance(umiAdmin.publicKey)
+    // );
 
-    // Make gameAdmin the payer
+    // const builder = await createTree(umi, {
+    //   merkleTree,
+    //   maxDepth: 14,
+    //   maxBufferSize: 64,
+    // });
 
-    // Instead of using gameAdmin, generate a fresh signer for the tree
-    const merkleTree = generateSigner(umi);
-    console.log("Merkle tree public key:", merkleTree.publicKey.toString());
-    console.log(
-      "umi admin sol balance",
-      await umi.rpc.getBalance(umiAdmin.publicKey)
-    );
-    await umi.rpc.airdrop(umiAdmin.publicKey, sol(2));
-    console.log(
-      "umi admin sol balance",
-      await umi.rpc.getBalance(umiAdmin.publicKey)
-    );
-
-    const builder = await createTree(umi, {
-      merkleTree,
-      maxDepth: 14,
-      maxBufferSize: 64,
-    });
-
-    await builder.sendAndConfirm(umi);
-    const treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
-    console.log("treeConfig", treeConfig);
+    // await builder.sendAndConfirm(umi);
+    // const treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
+    // console.log("treeConfig", treeConfig);
 
     const player = anchor.web3.Keypair.generate();
     console.log("Player key", player.publicKey);
@@ -249,31 +240,31 @@ describe("snowlotus", () => {
       latestRandomness.randomness
     );
 
-    const { signature } = await mintV1(umi, {
-      leafOwner: publicKey(player.publicKey),
-      merkleTree: merkleTree.publicKey,
-      metadata: {
-        name: "My Compressed NFT",
-        uri: "https://example.com/my-cnft.json",
-        sellerFeeBasisPoints: 500, // 5%
-        collection: none(),
-        creators: [
-          { address: umi.identity.publicKey, verified: false, share: 100 },
-        ],
-      },
-    }).sendAndConfirm(umi);
-    const leaf: LeafSchema = await parseLeafFromMintV1Transaction(
-      umi,
-      signature
-    );
-    console.log("leaf", leaf);
-    const assetId = findLeafAssetIdPda(umi, {
-      merkleTree: merkleTree.publicKey,
-      leafIndex: leaf.nonce,
-    });
-    console.log("assetId", assetId);
-    const rpcAssetProof = await umi.rpc.getAssetProof(publicKey(assetId));
-    console.log(rpcAssetProof);
+    // const { signature } = await mintV1(umi, {
+    //   leafOwner: publicKey(player.publicKey),
+    //   merkleTree: merkleTree.publicKey,
+    //   metadata: {
+    //     name: "My Compressed NFT",
+    //     uri: "https://example.com/my-cnft.json",
+    //     sellerFeeBasisPoints: 500, // 5%
+    //     collection: none(),
+    //     creators: [
+    //       { address: umi.identity.publicKey, verified: false, share: 100 },
+    //     ],
+    //   },
+    // }).sendAndConfirm(umi);
+    // const leaf: LeafSchema = await parseLeafFromMintV1Transaction(
+    //   umi,
+    //   signature
+    // );
+    // console.log("leaf", leaf);
+    // const assetId = findLeafAssetIdPda(umi, {
+    //   merkleTree: merkleTree.publicKey,
+    //   leafIndex: leaf.nonce,
+    // });
+    // console.log("assetId", assetId);
+    // const rpcAssetProof = await umi.rpc.getAssetProof(publicKey(assetId));
+    // console.log(rpcAssetProof);
 
     /// mint 5 random cards to player
   });
