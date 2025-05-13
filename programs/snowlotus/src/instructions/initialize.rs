@@ -96,37 +96,49 @@ pub struct Initialize<'info> {
     pub master_edition_ata: InterfaceAccount<'info, TokenAccount>,
 
     pub associated_token_program: Program<'info, AssociatedToken>,
+
+    pub clock: Sysvar<'info, Clock>,
 }
 
 impl<'info> Initialize<'info> {
-
+    
     pub fn handler(
         &mut self,
         game_id: u64,
         target_price: u64,
-        randomness_period: u8,
+        price_decay: u64,
+        game_start_slot: u64,
+        game_end_slot: u64,
+        drand_generation_time: u8,
+        drand_round_delay: u64, 
         genesis_time: u64,
         boosters_pack_vrf_callback_fee: u64,
         bumps: InitializeBumps,
     ) -> Result<()> {
-        msg!("Greetings");
+        let game_start_slot = self.clock.slot;
+
         self.game.set_inner(Game {
             admin: self.admin.key(),
             game_id,
             target_price,
+            price_decay,
+            game_start_slot,
+            game_end_slot,
+            boosters_sold: 0,
             bump: bumps.game,
             treasury_bump: bumps.treasury,
             mint: self.mint.key(),
             metadata_bump: bumps.metadata,
             master_edition_bump: bumps.master_edition,
             prize_pool_bump: bumps.prize_pool,
-            vrf_config_bump: bumps.vrf_config,
-            boosters_pack_vrf_callback_fee,
+            vrf_config_bump: bumps.vrf_config,            
         });
         self.vrf_config.set_inner(VrfConfig {
-            randomness_period,
+            drand_generation_time,
             genesis_time,
             bump: bumps.vrf_config,
+            boosters_pack_vrf_callback_fee,
+            drand_round_delay,
         });
 
         let game_id_bytes = game_id.to_le_bytes();

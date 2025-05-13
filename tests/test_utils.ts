@@ -14,9 +14,6 @@ export async function getLamportBalance(accountPubKey: PublicKey) {
   const balance = await anchor
     .getProvider()
     .connection.getBalance(accountPubKey);
-  console.log(
-    `Balance: ${balance} Lamports (${balance / LAMPORTS_PER_SOL} SOL)`
-  );
   return balance;
 }
 
@@ -89,17 +86,37 @@ export async function scanNewBoosterPacksSinceSlot(
 export const QUICKNET_CHAIN_HASH =
   "52db9ba70e0cc0f6eaf7803dd07447a1f5477735fd3f661792ba94600c84e971";
 
-export async function getLatestRandomness(): Promise<DrandResponse> {
+import { Agent } from "undici";
+
+export async function getLatestRandomness(
+  timeout = 60000
+): Promise<DrandResponse> {
   const response = await fetch(
     `https://drand.cloudflare.com/${QUICKNET_CHAIN_HASH}/public/latest`,
     {
-      headers: {
-        Accept: "application/json",
-      },
+      dispatcher: new Agent({ connectTimeout: timeout }),
     }
   );
 
   const data = (await response.json()) as DrandResponse;
+
+  return {
+    round: data.round,
+    signature: data.signature,
+    randomness: data.randomness,
+  };
+}
+
+export async function getRound(round, timeout = 60000): Promise<DrandResponse> {
+  const response = await fetch(
+    `https://drand.cloudflare.com/${QUICKNET_CHAIN_HASH}/public/${round}`,
+    {
+      dispatcher: new Agent({ connectTimeout: timeout }),
+    }
+  );
+
+  const data = (await response.json()) as DrandResponse;
+
   return {
     round: data.round,
     signature: data.signature,

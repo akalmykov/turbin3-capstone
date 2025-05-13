@@ -93,6 +93,48 @@ A player has:
    Effect: Deal 500 magic damage.
    Rarity: 45
 
+## Advanced attack cards
+
+1. Celestial Sever
+   Effect: Deal 600 physical damage. Restore mana equal to 15% of damage dealt.
+   Rarity: 65
+
+2. Abyssal Sunder
+   Effect: Deal 800 physical damage. If the target has a mana shield active, deal 50% bonus damage.
+   Rarity: 80
+
+3. Reaper’s Toll
+   Effect: Deal 450 physical damage. If this the damage dealt is more than 400, deal an additional 100 true damage.
+   Rarity: 60
+
+4. Blood Pact
+   Effect: Deal 400 physical damage. Lose HP equal to 10% of damage dealt, but restore mana equal to 20% of damage dealt.
+   Rarity: 50
+
+5. Echoing Annihilation
+   Effect: Deal 700 physical damage. If the target has damage reflection, this attack is not reflected.
+   Rarity: 75
+
+6. Necrotic Beam
+   Effect: Deal 170 magic damage. Restore HP equal to 25% of damage dealt.
+   Rarity: 25
+
+7. Twin Strike
+   Effect: Deal 80 physical and 80 magic damage.
+   Rarity: 15
+
+8. Echoing Strike (Rarity: 30)
+   Effect: Deal 200 physical damage to the the target and yourself.
+   Rarity: 20
+
+9. Echoing Charge (Rarity: 30)
+   Effect: Deal 200 magical damage to the the target and yourself.
+   Rarity: 20
+
+10. Last Reserve
+    Effect: Deal 200 magic damage.If your MP is below 50, this costs 0 MP and deals +50 damage.
+    Rarity: 25
+
 ## Health restoration cards:
 
 1. Minor Bandage
@@ -212,72 +254,6 @@ A player has:
 16. Arcane Strike
     Effect: Enable Pure Cast (ignore magic resistance).
     Rarity: 50
-
-## Disablers
-
-1. Mirror Shatter
-   Effect: Disable Damage Reflection.
-   Rarity: 30
-
-2. Power Suppress
-   Effect: Disable Double Damage.
-   Rarity: 35
-
-3. Lifesteal Lock
-   Effect: Disable Physical Lifesteal.
-   Rarity: 28
-
-4. Manasteal Lock
-   Effect: Disable Physical Manasteal.
-   Rarity: 26
-
-5. Arcane Block
-   Effect: Disable Arcane Lifesteal.
-   Rarity: 30
-
-6. Siphon Seal
-   Effect: Disable Arcane Manasteal.
-   Rarity: 30
-
-7. Break the Martyr
-   Effect: Disable Mana Martyr.
-   Rarity: 33
-
-8. Burn Blocker
-   Effect: Disable Mana Burn.
-   Rarity: 34
-
-9. Null Shell
-   Effect: Disable Mana Shield.
-   Rarity: 42
-
-10. Purify Body
-    Effect: Disable Cursed Body.
-    Rarity: 20
-
-11. Purify Soul
-    Effect: Disable Cursed Soul.
-    Rarity: 20
-
-12. Dispel Arcane
-    Effect: Disable Arcane.
-    Rarity: 25
-
-13. Break Balance
-    Effect: Disable Balance.
-    Rarity: 30
-
-14. Disarm Crit
-    Effect: Disable Crit Strike.
-    Rarity: 55
-
-15. Armor Shred Lock
-    Effect: Disable Pure Strike.
-    Rarity: 45
-
-16. Wipe Cast
-    Effect: Disable Pure Cast.
-    Rarity: 45
 
 ## Non-trivial cards
 

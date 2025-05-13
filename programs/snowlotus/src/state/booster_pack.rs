@@ -13,4 +13,5 @@ pub struct BoosterPack {
     pub bump: u8,
     pub is_open: bool,
     pub randomness: [u8; 32],
+    pub card_ids: [u64; 5],
 }

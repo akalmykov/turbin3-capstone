@@ -1,6 +1,5 @@
 use crate::{
-    error::CustomErrorCode,
-    state::{BoosterPack, Game, Player, VrfConfig},
+    error::CustomErrorCode, state::{BoosterPack, Game, Player, VrfConfig}, vrf_config, vrgda::sqrt_vrgda_price
 };
 use anchor_lang::prelude::*;
 #[derive(Accounts)]
@@ -16,6 +15,7 @@ pub struct BuyBooster<'info> {
     pub game: Account<'info, Game>,
 
     #[account(
+        mut,
         seeds = [b"treasury", game.key().as_ref()],
         bump = game.treasury_bump,
     )]
@@ -72,7 +72,7 @@ impl<'info> BuyBooster<'info> {
         let randomness_round = self.round_for_time(
             current_time,
             self.vrf_config.genesis_time,
-            self.vrf_config.randomness_period,
+            self.vrf_config.drand_generation_time,
         )?;
 
         let slot = self.clock.slot;
@@ -83,6 +83,7 @@ impl<'info> BuyBooster<'info> {
               owner: self.signer.key(),
               booster_pack_count,
               bump: bumps.player,
+              hp: 1000,
           });
         }
   
@@ -97,10 +98,28 @@ impl<'info> BuyBooster<'info> {
             bump: bumps.booster_pack,
             is_open: false,
             randomness: [0; 32],
+            card_ids: [0; 5],
         });
 
         self.player.booster_pack_count += 1;
+        self.game.boosters_sold += 1;
+        let price = sqrt_vrgda_price(self.game.target_price, self.game.price_decay, (self.clock.slot - self.game.game_start_slot) as i64, self.game.boosters_sold as i64);
+
+        let txn = anchor_lang::solana_program::system_instruction::transfer(
+            &self.signer.key(),
+            &self.treasury.key(),
+            price + self.vrf_config.boosters_pack_vrf_callback_fee,
+        );
+        let _ = anchor_lang::solana_program::program::invoke(
+            &txn,
+            &[
+                self.signer.to_account_info(),
+                self.treasury.to_account_info(),
+            ],
+        );
 
         Ok(())
     }
 }
+
+

@@ -1,0 +1,43 @@
+Generate an interface for a card game - the interface must be single page application.
+
+A user should login by connecting a Phantom wallet - a button for this must be located in top right corner.
+When a user logged in, the button should turn to logout screen.
+
+At the top a user info must be displayed:
+- Solana blockchain address
+- health points (hp)
+- mana points 
+- armor points
+- magical resistance
+- Active buffs/Debuffs list
+
+Then there must be a list of 25 latest cards displayed as images.
+
+There must be the following buttons:
+- View all cards
+- Buy a booster pack
+- Play card on myself
+
+
+
+In the middle of the screen, a half of the screen must be a list of all players (default sort by health points.). Each player should have have:
+
+- Solana blockchain address
+- health points (hp)
+- mana points 
+- armor points
+- magical resistance
+- View more... link
+- "Play card" button
+
+Another half should be a game log where the latest plays must be displayed. The list is sortable and filterable.
+The columns are:
+
+- player
+- target 
+- card
+- damage dealt
+- buffs/debuff applied
+
+
+

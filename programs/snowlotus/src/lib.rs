@@ -3,6 +3,7 @@ pub mod constants;
 pub mod error;
 pub mod instructions;
 pub mod state;
+pub mod vrgda;
 
 use anchor_lang::prelude::*;
 
@@ -20,14 +21,22 @@ pub mod snowlotus {
         ctx: Context<Initialize>,
         game_id: u64,
         target_price: u64,
-        randomness_period: u8,
+        price_decay: u64,
+        game_start_slot: u64,
+        game_end_slot: u64,
+        drand_generation_time: u8,
+        drand_round_delay: u64,
         genesis_time: u64,
         boosters_pack_vrf_callback_fee: u64,
     ) -> Result<()> {
         ctx.accounts.handler(
             game_id,
             target_price,
-            randomness_period,
+            price_decay,
+            game_start_slot,
+            game_end_slot,
+            drand_generation_time,
+            drand_round_delay,
             genesis_time,
             boosters_pack_vrf_callback_fee,
             ctx.bumps,
@@ -41,6 +50,7 @@ pub mod snowlotus {
         player: Pubkey,
         booster_pack_seq_no: u64,
         randomness: [u8; 32],
+        card_ids: [u64; 5],
         randomness_round: u64,
     ) -> Result<()> {
         ctx.accounts.handler(
@@ -48,6 +58,7 @@ pub mod snowlotus {
             player,
             booster_pack_seq_no,
             randomness,
+            card_ids,
             randomness_round,
             ctx.bumps,
         )?;
@@ -56,6 +67,18 @@ pub mod snowlotus {
 
     pub fn buy_booster(ctx: Context<BuyBooster>, game_id: u64) -> Result<()> {
         ctx.accounts.handler(game_id, ctx.bumps)?;
+        Ok(())
+    }
+
+    pub fn play_card(
+        ctx: Context<PlayCard>,
+        game_id: u64,
+        player: Pubkey,
+        target: Pubkey,
+        booster_pack_seq_no: u64,
+        card_seq_no: u8,
+    ) -> Result<()> {
+        ctx.accounts.handler(card_seq_no, ctx.bumps)?;
         Ok(())
     }
 }
