@@ -78,15 +78,16 @@ pub struct MintBooster<'info> {
 }
 
 impl<'info> MintBooster<'info> {
+    #[allow(clippy::too_many_arguments)]
     pub fn handler(
         &mut self, 
-        game_id: u64, 
-        player: Pubkey, 
-        booster_pack_seq_no: u64, 
+        _game_id: u64, 
+        _player: Pubkey, 
+        _booster_pack_seq_no: u64, 
         randomness: [u8; 32], 
         card_ids: [u64; 5], 
         randomness_round: u64, 
-        bumps: MintBoosterBumps
+        _bumps: MintBoosterBumps
     ) -> Result<()> {
         require!(
             self.booster_pack.randomness_round + self.vrf_config.drand_round_delay == randomness_round, 

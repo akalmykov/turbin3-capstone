@@ -1,6 +1,6 @@
 use anchor_lang::prelude::*;
 
-use crate::{state::Game, VrfConfig};
+use crate::{error::CustomErrorCode, state::Game, VrfConfig};
 use anchor_spl::{
     metadata::{
         create_master_edition_v3, create_metadata_accounts_v3, mpl_token_metadata::types::DataV2,
@@ -101,7 +101,8 @@ pub struct Initialize<'info> {
 }
 
 impl<'info> Initialize<'info> {
-    
+
+    #[allow(clippy::too_many_arguments)]
     pub fn handler(
         &mut self,
         game_id: u64,
@@ -115,7 +116,8 @@ impl<'info> Initialize<'info> {
         boosters_pack_vrf_callback_fee: u64,
         bumps: InitializeBumps,
     ) -> Result<()> {
-        let game_start_slot = self.clock.slot;
+        require!(game_start_slot < game_end_slot, CustomErrorCode::StartEndSlotInvalid);
+        require!(drand_generation_time > 0, CustomErrorCode::ZeroDrandGenerationTime);
 
         self.game.set_inner(Game {
             admin: self.admin.key(),
@@ -131,7 +133,8 @@ impl<'info> Initialize<'info> {
             metadata_bump: bumps.metadata,
             master_edition_bump: bumps.master_edition,
             prize_pool_bump: bumps.prize_pool,
-            vrf_config_bump: bumps.vrf_config,            
+            vrf_config_bump: bumps.vrf_config,    
+            merkle_root: [0; 32]        
         });
         self.vrf_config.set_inner(VrfConfig {
             drand_generation_time,

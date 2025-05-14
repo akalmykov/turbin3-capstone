@@ -20,4 +20,12 @@ pub enum CustomErrorCode {
     InvalidRandomnessRound,
     #[msg("Unsupported card")]
     UnsupportedCard,
+    #[msg("Game hasn't started or already finished")]
+    GameIsNotActive,
+    #[msg("Game hasn't finished")]
+    GameIsActive,
+    #[msg("Game start slot >= game end slot")]
+    StartEndSlotInvalid,
+    #[msg("Zero drand generation time")]
+    ZeroDrandGenerationTime,
 }

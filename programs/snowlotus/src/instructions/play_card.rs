@@ -54,6 +54,7 @@ pub struct PlayCard<'info> {
 
 impl<'info> PlayCard<'info> {
   pub fn handler(&mut self, card_seq_no: u8, bumps: PlayCardBumps) -> Result<()> {
+    require!(self.game.is_active(self.clock.slot), CustomErrorCode::GameIsNotActive);
     require!(self.signer.key() == self.player.owner, CustomErrorCode::InvalidPlayer);        
     require!(self.booster_pack.is_open, CustomErrorCode::BoosterPackIsNotOpened);
     play(self.booster_pack.card_ids[card_seq_no as usize], &mut self.player, &mut self.target_player)?;

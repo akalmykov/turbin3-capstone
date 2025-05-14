@@ -17,6 +17,7 @@ declare_id!("HZyyQDqNnQXd1coQB111vyg4VLutgshubTEAPYK99n61");
 pub mod snowlotus {
     use super::*;
 
+    #[allow(clippy::too_many_arguments)]
     pub fn initialize(
         ctx: Context<Initialize>,
         game_id: u64,
@@ -79,6 +80,11 @@ pub mod snowlotus {
         card_seq_no: u8,
     ) -> Result<()> {
         ctx.accounts.handler(card_seq_no, ctx.bumps)?;
+        Ok(())
+    }
+
+    pub fn finalize(ctx: Context<Finalize>, game_id: u64, merkle_root: [u8; 32]) -> Result<()> {
+        ctx.accounts.handler(game_id, merkle_root, ctx.bumps)?;
         Ok(())
     }
 }

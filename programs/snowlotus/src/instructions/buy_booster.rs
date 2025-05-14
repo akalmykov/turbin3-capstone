@@ -68,6 +68,8 @@ impl<'info> BuyBooster<'info> {
     }
 
     pub fn handler(&mut self, game_id: u64, bumps: BuyBoosterBumps) -> Result<()> {
+        require!(self.game.is_active(self.clock.slot), CustomErrorCode::GameIsNotActive);
+
         let current_time = self.clock.unix_timestamp as u64;
         let randomness_round = self.round_for_time(
             current_time,

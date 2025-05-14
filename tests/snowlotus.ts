@@ -104,8 +104,8 @@ describe("snowlotus", () => {
         );
       const mint = anchor.web3.Keypair.generate();
       const gameStartSlot = new BN(
-        await anchor.getProvider().connection.getSlot()
-      );
+        (await anchor.getProvider().connection.getSlot()) + 1
+      ); // +1 to match exact booster pack price in the next slot
       const oneWeekSlots = new BN(1_512_000);
       const gameEndSlot = gameStartSlot.add(oneWeekSlots);
       // console.log("Start slot:", gameStartSlot);
@@ -325,13 +325,6 @@ describe("snowlotus", () => {
       await airdropSol(targetPlayer.publicKey, 10);
       await buyBooster(gameId, targetPlayer);
 
-      const [targetPlayerPDAAddress, targetPlayerBump] =
-        await anchor.web3.PublicKey.findProgramAddressSync(
-          [Buffer.from("player"), targetPlayer.publicKey.toBuffer()],
-          program.programId
-        );
-      console.log("targetPlayer", targetPlayerPDAAddress);
-
       anchor.getProvider().wallet.payer = player;
       const txPlayCard = await program.methods
         .playCard(
@@ -347,6 +340,15 @@ describe("snowlotus", () => {
         })
         .rpc();
       await confirmTransaction(txPlayCard);
+      const [targetPlayerPDAAddress, targetPlayerBump] =
+        await anchor.web3.PublicKey.findProgramAddressSync(
+          [Buffer.from("player"), targetPlayer.publicKey.toBuffer()],
+          program.programId
+        );
+      const targetPlayerPDA = await program.account.player.fetch(
+        targetPlayerPDAAddress
+      );
+      assert.isTrue(targetPlayerPDA.hp.eq(new BN(900)));
 
       // const { signature } = await mintV1(umi, {
       //   leafOwner: publicKey(player.publicKey),
