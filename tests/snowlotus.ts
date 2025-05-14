@@ -372,6 +372,7 @@ describe("snowlotus", () => {
       assert.deepEqual(finalGamePDA.merkleRoot, root);
 
       anchor.getProvider().wallet.payer = player;
+      const balanceBeforeClaim = await getLamportBalance(player.publicKey);
       const txClaim = await program.methods
         .claim(gameId, targetPrice, proof, new BN(index))
         .signers([player])
@@ -380,7 +381,8 @@ describe("snowlotus", () => {
         })
         .rpc();
       await confirmTransaction(txClaim);
-
+      const balanceAfterClaim = await getLamportBalance(player.publicKey);
+      assert.isTrue(balanceAfterClaim > balanceBeforeClaim);
       // const { signature } = await mintV1(umi, {
       //   leafOwner: publicKey(player.publicKey),
       //   merkleTree: merkleTree.publicKey,
