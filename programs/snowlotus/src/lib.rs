@@ -87,4 +87,16 @@ pub mod snowlotus {
         ctx.accounts.handler(game_id, merkle_root, ctx.bumps)?;
         Ok(())
     }
+
+    pub fn claim(
+        ctx: Context<Claim>,
+        game_id: u64,
+        amount: u64,
+        hashes: Vec<u8>,
+        index: u64,
+    ) -> Result<()> {
+        ctx.accounts
+            .handler(game_id, amount, hashes, index, ctx.bumps)?;
+        Ok(())
+    }
 }

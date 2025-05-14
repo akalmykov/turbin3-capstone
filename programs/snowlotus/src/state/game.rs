@@ -22,6 +22,6 @@ pub struct Game {
 
 impl Game {
     pub fn is_active(&self, current_slot: u64) -> bool {
-        self.game_start_slot <= current_slot && self.game_start_slot < self.game_end_slot
+        self.game_start_slot <= current_slot && current_slot < self.game_end_slot
     }
 }

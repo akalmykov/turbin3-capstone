@@ -123,3 +123,20 @@ export async function getRound(round, timeout = 60000): Promise<DrandResponse> {
     randomness: data.randomness,
   };
 }
+
+export async function waitForBlocks(blocksToWait: number) {
+  const startSlot = await anchor.getProvider().connection.getSlot();
+
+  return new Promise<void>((resolve) => {
+    const checkSlot = async () => {
+      const currentSlot = await anchor.getProvider().connection.getSlot();
+      if (currentSlot >= startSlot + blocksToWait) {
+        resolve();
+      } else {
+        setTimeout(checkSlot, 400); // Solana produces blocks every ~400ms
+      }
+    };
+
+    checkSlot();
+  });
+}

@@ -9,6 +9,7 @@ import {
   scanNewBoosterPacksSinceSlot,
   getLatestRandomness,
   getRound,
+  waitForBlocks,
 } from "./test_utils";
 import { assert } from "chai";
 import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
@@ -36,6 +37,7 @@ import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
 import { mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
 import { min } from "bn.js";
 import { createSplAssociatedTokenProgram } from "@metaplex-foundation/mpl-toolbox";
+import { generateClaimMerkleTree } from "./prize_claim";
 
 describe("snowlotus", () => {
   // Configure the client to use the local cluster.
@@ -106,8 +108,10 @@ describe("snowlotus", () => {
       const gameStartSlot = new BN(
         (await anchor.getProvider().connection.getSlot()) + 1
       ); // +1 to match exact booster pack price in the next slot
-      const oneWeekSlots = new BN(1_512_000);
-      const gameEndSlot = gameStartSlot.add(oneWeekSlots);
+      // const oneWeekSlots = new BN(1_512_000);
+      // const gameEndSlot = gameStartSlot.add(new BN(20));
+      const gameDuration = new BN(50);
+      const gameEndSlot = gameStartSlot.add(gameDuration);
       // console.log("Start slot:", gameStartSlot);
 
       const tx = await program.methods
@@ -276,7 +280,7 @@ describe("snowlotus", () => {
         Buffer.from(randomnessRound.randomness, "hex")
       );
       const cards = openBooster(randomness);
-      console.log("cards", cards);
+      // console.log("cards", cards);
       anchor.getProvider().wallet.payer = gameAdmin;
       const tx3 = await program.methods
         .mintBooster(
@@ -319,7 +323,7 @@ describe("snowlotus", () => {
         Buffer.from(openedBoosterPack.randomness).toString("hex"),
         randomnessRound.randomness
       );
-      console.log("boosterPackPDAAddress", boosterPackPDAAddress);
+      // console.log("boosterPackPDAAddress", boosterPackPDAAddress);
 
       const targetPlayer = anchor.web3.Keypair.generate();
       await airdropSol(targetPlayer.publicKey, 10);
@@ -349,6 +353,33 @@ describe("snowlotus", () => {
         targetPlayerPDAAddress
       );
       assert.isTrue(targetPlayerPDA.hp.eq(new BN(900)));
+
+      await waitForBlocks(gameDuration.toNumber());
+      const { root, proof, index } = generateClaimMerkleTree(
+        player.publicKey,
+        targetPrice
+      );
+      anchor.getProvider().wallet.payer = gameAdmin;
+      const txFinalize = await program.methods
+        .finalize(gameId, root)
+        .signers([gameAdmin])
+        .accounts({
+          admin: gameAdmin.publicKey,
+        })
+        .rpc();
+      await confirmTransaction(txFinalize);
+      const finalGamePDA = await program.account.game.fetch(gamePDAAddress);
+      assert.deepEqual(finalGamePDA.merkleRoot, root);
+
+      anchor.getProvider().wallet.payer = player;
+      const txClaim = await program.methods
+        .claim(gameId, targetPrice, proof, new BN(index))
+        .signers([player])
+        .accounts({
+          player: player.publicKey,
+        })
+        .rpc();
+      await confirmTransaction(txClaim);
 
       // const { signature } = await mintV1(umi, {
       //   leafOwner: publicKey(player.publicKey),

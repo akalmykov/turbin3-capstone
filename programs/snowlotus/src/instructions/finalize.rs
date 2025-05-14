@@ -1,9 +1,4 @@
-use crate::{
-    error::CustomErrorCode,
-    state::{BoosterPack, Game, Player, VrfConfig},
-    vrf_config,
-    vrgda::sqrt_vrgda_price,
-};
+use crate::{error::CustomErrorCode, state::Game};
 use anchor_lang::prelude::*;
 #[derive(Accounts)]
 #[instruction(game_id: u64)]

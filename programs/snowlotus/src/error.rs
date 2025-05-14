@@ -28,4 +28,8 @@ pub enum CustomErrorCode {
     StartEndSlotInvalid,
     #[msg("Zero drand generation time")]
     ZeroDrandGenerationTime,
+    #[msg("Invalid Merkle Proof")]
+    InvalidProof,
+    #[msg("Insufficient funds in treasury")]
+    InsufficientFunds,
 }
