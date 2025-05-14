@@ -7,36 +7,11 @@ import {
   airdropSol,
   confirmTransaction,
   scanNewBoosterPacksSinceSlot,
-  getLatestRandomness,
   getRound,
   waitForBlocks,
 } from "./test_utils";
 import { assert } from "chai";
-import { LAMPORTS_PER_SOL, PublicKey } from "@solana/web3.js";
-import {
-  MPL_TOKEN_METADATA_PROGRAM_ID,
-  mplTokenMetadata,
-} from "@metaplex-foundation/mpl-token-metadata";
-import {
-  createSignerFromKeypair,
-  generateSigner,
-  keypairIdentity,
-  none,
-  publicKey,
-  sol,
-} from "@metaplex-foundation/umi";
-import {
-  createTree,
-  fetchTreeConfigFromSeeds,
-  findLeafAssetIdPda,
-  LeafSchema,
-  mintV1,
-  parseLeafFromMintV1Transaction,
-} from "@metaplex-foundation/mpl-bubblegum";
-import { createUmi } from "@metaplex-foundation/umi-bundle-defaults";
-import { mplBubblegum } from "@metaplex-foundation/mpl-bubblegum";
-import { min } from "bn.js";
-import { createSplAssociatedTokenProgram } from "@metaplex-foundation/mpl-toolbox";
+import { LAMPORTS_PER_SOL } from "@solana/web3.js";
 import { generateClaimMerkleTree } from "./prize_claim";
 
 describe("snowlotus", () => {
@@ -76,12 +51,7 @@ describe("snowlotus", () => {
 
     try {
       const gameAdmin = anchor.web3.Keypair.generate();
-      // console.log("Admin key", gameAdmin.publicKey);
       await airdropSol(gameAdmin.publicKey, 10);
-      // console.log(
-      //   "admin sol balance",
-      //   await getLamportBalance(gameAdmin.publicKey)
-      // );
       const defaultTxFee = new BN(10_000);
       const gameId = new BN(1);
       const targetPrice = new BN(LAMPORTS_PER_SOL / 10); // 0.1 SOL
@@ -136,54 +106,14 @@ describe("snowlotus", () => {
         })
         .rpc();
       await confirmTransaction(tx);
-      // console.log("Your transaction signature", tx);
-
-      // console.log("PDA address:", gamePDAAddress.toString());
-      // Fetch the account data
       const gamePDA = await program.account.game.fetch(gamePDAAddress);
-      // console.log("Account data:", gamePDA);
 
       assert.isTrue(gamePDA.admin.equals(gameAdmin.publicKey));
       assert.isTrue(gamePDA.gameId.eq(gameId));
       assert.isTrue(gamePDA.targetPrice.eq(targetPrice));
       assert.isTrue(gamePDA.bump === bump);
 
-      // // mint cNFTs
-      // const rpcUrl = anchor.getProvider().connection.rpcEndpoint;
-      // console.log("RPC URL:", rpcUrl);
-      // const umi = createUmi(rpcUrl).use(mplBubblegum()).use(mplTokenMetadata());
-      // umi.programs.add(createSplAssociatedTokenProgram());
-
-      // const umiAdmin = createSignerFromKeypair(umi, {
-      //   publicKey: publicKey(gameAdmin.publicKey),
-      //   secretKey: gameAdmin.secretKey,
-      // });
-      // umi.use(keypairIdentity(umiAdmin));
-
-      // const merkleTree = generateSigner(umi);
-      // console.log("Merkle tree public key:", merkleTree.publicKey.toString());
-      // console.log(
-      //   "umi admin sol balance",
-      //   await umi.rpc.getBalance(umiAdmin.publicKey)
-      // );
-      // await umi.rpc.airdrop(umiAdmin.publicKey, sol(2));
-      // console.log(
-      //   "umi admin sol balance",
-      //   await umi.rpc.getBalance(umiAdmin.publicKey)
-      // );
-
-      // const builder = await createTree(umi, {
-      //   merkleTree,
-      //   maxDepth: 14,
-      //   maxBufferSize: 64,
-      // });
-
-      // await builder.sendAndConfirm(umi);
-      // const treeConfig = await fetchTreeConfigFromSeeds(umi, { merkleTree });
-      // console.log("treeConfig", treeConfig);
-
       const player = anchor.web3.Keypair.generate();
-      // console.log("Player key", player.publicKey);
       await airdropSol(player.publicKey, 10);
       const [playerPDAAddress, playerBump] =
         await anchor.web3.PublicKey.findProgramAddressSync(
@@ -198,7 +128,6 @@ describe("snowlotus", () => {
       if (playerPDA) {
         boosterCount = playerPDA.boosterPackCount;
       }
-      // console.log("boosterCount", boosterCount);
       const [boosterPackPDAAddress, boosterPackBump] =
         anchor.web3.PublicKey.findProgramAddressSync(
           [
@@ -220,13 +149,7 @@ describe("snowlotus", () => {
         program.programId
       );
 
-      // const latestRandomness = await getLatestRandomness();
-      // console.log("Latest randomness:", latestRandomness);
       anchor.getProvider().wallet.payer = player;
-      // console.log(
-      //   "treasury balance before purchase",
-      //   await getLamportBalance(treasuryPDA)
-      // );
       const tx2 = await program.methods
         .buyBooster(gameId)
         .signers([player])
@@ -236,10 +159,6 @@ describe("snowlotus", () => {
         })
         .rpc();
       await confirmTransaction(tx2);
-      // console.log(
-      //   "treasury balance after purchase",
-      //   (await getLamportBalance(treasuryPDA)) / LAMPORTS_PER_SOL
-      // );
       assert.equal(
         await getLamportBalance(treasuryPDA),
         targetPrice.add(vrfFee).sub(defaultTxFee).toNumber()
@@ -251,27 +170,19 @@ describe("snowlotus", () => {
         program.programId,
         slot - 1 // Look back 1 slot
       );
-      // console.log("New booster packs found:", newBoosterPacks);
       assert.equal(newBoosterPacks.length, 1);
       assert.isTrue(newBoosterPacks[0].equals(boosterPackPDAAddress));
       const boosterPack = await program.account.boosterPack.fetch(
         newBoosterPacks[0]
       );
-      // console.log("Transaction sent!", tx2);
       const playerPDA2 = await program.account.player.fetchNullable(
         playerPDAAddress
       );
       assert.isTrue(playerPDA2.boosterPackCount.eq(new BN(1)));
-      // console.log("Booster pack:", boosterPack);
 
       const randomnessRound = await getRound(
         boosterPack.randomnessRound.add(drandRoundDelay)
       );
-      // console.log("randomnessRound", randomnessRound);
-      // console.log(
-      //  "boosterPack.randomnessRound.toString():",
-      //  boosterPack.randomnessRound.toString()
-      //);
       assert.equal(
         randomnessRound.round,
         boosterPack.randomnessRound.toNumber() + drandRoundDelay.toNumber()
@@ -280,7 +191,6 @@ describe("snowlotus", () => {
         Buffer.from(randomnessRound.randomness, "hex")
       );
       const cards = openBooster(randomness);
-      // console.log("cards", cards);
       anchor.getProvider().wallet.payer = gameAdmin;
       const tx3 = await program.methods
         .mintBooster(
@@ -288,7 +198,6 @@ describe("snowlotus", () => {
           player.publicKey,
           boosterPack.seqNo,
           randomness,
-          // cards.map((c) => new BN(c.id)),
           [
             new BN(1),
             new BN(cards[1].id),
@@ -306,7 +215,6 @@ describe("snowlotus", () => {
         })
         .rpc();
 
-      // console.log("boosterPack", boosterPackPDAAddress);
       await confirmTransaction(tx3);
       const openedBoosterPack = await program.account.boosterPack.fetch(
         newBoosterPacks[0]
@@ -314,16 +222,11 @@ describe("snowlotus", () => {
       for (let i = 1; i < openedBoosterPack.cardIds.length; i++) {
         assert.equal(cards[i].id, openedBoosterPack.cardIds[i]);
       }
-      // console.log(
-      //   "Opened booster pack:",
-      //   openedBoosterPack.randomness.toString("hex")
-      // );
       assert.isTrue(openedBoosterPack.isOpen);
       assert.strictEqual(
         Buffer.from(openedBoosterPack.randomness).toString("hex"),
         randomnessRound.randomness
       );
-      // console.log("boosterPackPDAAddress", boosterPackPDAAddress);
 
       const targetPlayer = anchor.web3.Keypair.generate();
       await airdropSol(targetPlayer.publicKey, 10);
@@ -383,33 +286,6 @@ describe("snowlotus", () => {
       await confirmTransaction(txClaim);
       const balanceAfterClaim = await getLamportBalance(player.publicKey);
       assert.isTrue(balanceAfterClaim > balanceBeforeClaim);
-      // const { signature } = await mintV1(umi, {
-      //   leafOwner: publicKey(player.publicKey),
-      //   merkleTree: merkleTree.publicKey,
-      //   metadata: {
-      //     name: "My Compressed NFT",
-      //     uri: "https://example.com/my-cnft.json",
-      //     sellerFeeBasisPoints: 500, // 5%
-      //     collection: none(),
-      //     creators: [
-      //       { address: umi.identity.publicKey, verified: false, share: 100 },
-      //     ],
-      //   },
-      // }).sendAndConfirm(umi);
-      // const leaf: LeafSchema = await parseLeafFromMintV1Transaction(
-      //   umi,
-      //   signature
-      // );
-      // console.log("leaf", leaf);
-      // const assetId = findLeafAssetIdPda(umi, {
-      //   merkleTree: merkleTree.publicKey,
-      //   leafIndex: leaf.nonce,
-      // });
-      // console.log("assetId", assetId);
-      // const rpcAssetProof = await umi.rpc.getAssetProof(publicKey(assetId));
-      // console.log(rpcAssetProof);
-
-      /// mint 5 random cards to player
     } catch (error) {
       console.error("Test failed with error:", error);
       console.error("Stack trace:", error.stack);

@@ -6,3 +6,4 @@ node_modules
 test-ledger
 .yarn
 .venv
+turbin3-wallet.json

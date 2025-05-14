@@ -1,7 +1,20 @@
+## Deployment
+
+Deployed to the Solana Devnet:
+
+````
+Deploying cluster: https://api.devnet.solana.com
+Upgrade authority: ./turbin3-wallet.json
+Deploying program "snowlotus"...
+Program path: /home/lexx/code/turbin3/snowlotus/target/deploy/snowlotus.so...
+Program Id: 8dBK1WKr6bxzvggCvnMWwWtEEEozwtXKdCqLL8yJNeec
+
+Signature: 5Kqzo1wJApra6hrNizvNpcawME9Jsk3FyAW5T8aL3MF9eX8yvnpJMFTFUtvnmYSosjQAsPdANowKNdUt1NNyeLp8
+```
 ## Game model
 
 A player has:
-
+```
 - HP: i64
 - MP: u64
 - Resistance/Amplification:
@@ -24,7 +37,7 @@ A player has:
   -- Crit strike: next physical attack deals +400% damage
   -- Pure strike: next physical attack ignore armor
   -- Pure cast: next physical attack ignores magic damage
-
+```
 ## Physical Damage Cards:
 
 1. Brutal Slash
@@ -372,3 +385,4 @@ A player has:
 ## Randomness source
 
 https://docs.drand.love/dev-guide/API%20Documentation%20v2/v-2-beacons-beacon-id-info/
+````
